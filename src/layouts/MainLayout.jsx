@@ -5,7 +5,7 @@ import { useThemeStore } from '../store/themeStore';
 import { Button } from '../components/ui/button';
 import { 
   LogOut, User, Moon, Sun, Home, Users, HeartPulse, 
-  PlusCircle, FileSpreadsheet, ChevronDown, ShieldCheck, Heart 
+  PlusCircle, FileSpreadsheet, ChevronDown, ShieldCheck, Heart, LogIn 
 } from 'lucide-react';
 import Logo from '../components/Logo';
 import Footer from '../components/Footer';
@@ -248,10 +248,13 @@ export default function MainLayout() {
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="flex gap-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="rounded-xl">Login</Button>
-                <Button size="sm" onClick={() => navigate('/register')} className="rounded-xl font-bold bg-primary text-primary-foreground shadow-md shadow-primary/30">Register</Button>
-              </div>
+              <Button 
+                onClick={() => navigate('/login')} 
+                className="rounded-2xl font-black bg-primary hover:bg-rose-700 text-white shadow-lg shadow-rose-600/10 px-5 h-10 text-xs flex items-center gap-1.5 transition-all active:scale-95"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                <span>Login</span>
+              </Button>
             )}
           </div>
         </div>

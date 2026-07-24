@@ -32,9 +32,14 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         
+        {/* Public Routes */}
+        <Route element={<MainLayout />}>
+          <Route path="/" element={<Dashboard />} />
+        </Route>
+        
+        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/become-donor" element={<BecomeDonor />} />
             <Route path="/request-blood" element={<RequestBlood />} />

@@ -82,66 +82,38 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* High-Impact Professional Animated Banner */}
+      {/* Simple Human-Centric Peer Solidarity Banner with Premium Gradient */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative overflow-hidden rounded-[2.5rem] border border-primary/25 bg-gradient-to-br from-card via-card/95 to-primary/10 p-6 sm:p-10 shadow-2xl"
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-[2.5rem] border border-rose-500/15 bg-gradient-to-br from-rose-500/[0.04] via-card to-rose-500/[0.01] dark:from-rose-950/20 dark:via-card dark:to-zinc-950 p-6 sm:p-10 shadow-xl text-center"
       >
-        {/* Animated Background Glow Orbs */}
-        <div className="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl pointer-events-none animate-pulse" />
-        <div className="absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-rose-600/15 blur-3xl pointer-events-none" />
+        {/* Soft Professional Ambient Decorative Glows */}
+        <div className="absolute -left-24 -top-24 w-80 h-80 rounded-full bg-gradient-to-br from-primary/15 to-transparent blur-3xl pointer-events-none opacity-90" />
+        <div className="absolute -right-24 -bottom-24 w-80 h-80 rounded-full bg-gradient-to-tr from-rose-500/10 to-transparent blur-3xl pointer-events-none opacity-90" />
 
-        {/* Floating Blood Type Chips */}
-        {floatingBadges.map((badge, idx) => (
-          <motion.div
-            key={idx}
-            animate={{
-              y: [0, -8, 0],
-              opacity: [0.7, 1, 0.7]
-            }}
-            transition={{
-              duration: 3 + idx,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            style={{ position: 'absolute', left: badge.x, top: badge.y }}
-            className={`hidden md:flex items-center justify-center h-10 w-10 rounded-2xl border text-xs font-black shadow-lg backdrop-blur-md pointer-events-none z-10 ${badge.color}`}
-          >
-            {badge.text}
-          </motion.div>
-        ))}
-
-        <div className="relative z-20 space-y-6 max-w-2xl mx-auto text-center">
-          {/* Live Network Beacon */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-xs font-extrabold text-primary tracking-widest uppercase shadow-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            LIVE CAMPUS EMERGENCY NETWORK
+        <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-xs font-black text-primary tracking-wide">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            CAMPUS BLOOD NETWORK
           </div>
 
-          {/* Banner Title & Description */}
           <div className="space-y-3">
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-foreground leading-[1.15]">
-              Connect Donors. <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-rose-400 to-amber-300">
-                Save Campus Lives Fast.
-              </span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-foreground leading-[1.15]">
+              Save Lives by <span className="text-primary">Sharing Blood.</span>
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-lg mx-auto font-medium">
-              Real-time emergency blood matching platform. Connect directly with verified campus donors and receive instant assistance.
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-2xl mx-auto font-medium">
+              BloodBridge connects students, teachers, and staff with real blood donors on our campus. In an emergency, you can find help or offer help quickly and easily without any delay.
             </p>
           </div>
 
-          {/* Quick CTA Action Group */}
+          {/* Core Human Actions */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <Button 
               size="lg"
               onClick={() => navigate('/become-donor')}
-              className="rounded-2xl bg-primary text-primary-foreground font-bold shadow-xl shadow-primary/30 hover:bg-primary/90 h-12 px-6 gap-2 text-sm"
+              className="rounded-2xl bg-primary text-primary-foreground hover:bg-rose-700 font-bold shadow-lg shadow-rose-600/15 h-11 px-5 gap-2 text-xs"
             >
               <HeartPulse className="h-4 w-4" /> Become a Donor
             </Button>
@@ -149,7 +121,7 @@ export default function Dashboard() {
               size="lg"
               variant="outline"
               onClick={() => navigate('/request-blood')}
-              className="rounded-2xl border-primary/40 bg-card/80 text-foreground font-bold hover:bg-secondary h-12 px-6 gap-2 text-sm shadow-md"
+              className="rounded-2xl border-border bg-card text-foreground font-bold hover:bg-secondary h-11 px-5 gap-2 text-xs shadow-sm"
             >
               <Radio className="h-4 w-4 text-primary animate-pulse" /> Need Blood SOS
             </Button>
@@ -157,40 +129,40 @@ export default function Dashboard() {
               size="lg"
               variant="ghost"
               onClick={() => navigate('/donors')}
-              className="rounded-2xl text-muted-foreground hover:text-foreground font-semibold h-12 px-4 gap-1.5 text-xs"
+              className="rounded-2xl text-muted-foreground hover:text-foreground font-bold h-11 px-3 gap-1 text-xs"
             >
               <Search className="h-4 w-4" /> Find Donors
             </Button>
           </div>
+        </div>
 
-          {/* Live Dynamic Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-border/60">
-            <div className="p-3 rounded-2xl bg-card/60 border border-border/80 text-center">
-              <div className="text-2xl font-black text-foreground">{stats.totalDonors}</div>
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 flex items-center justify-center gap-1">
-                <Users size={12} className="text-primary" /> Active Donors
-              </div>
+        {/* Dynamic Trust and Impact Stats Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 pt-8 border-t border-border/60">
+          <div className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5">
+            <div className="text-2xl font-black text-foreground">{stats.totalDonors}</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
+              <Users size={12} className="text-primary" /> Active Donors
             </div>
+          </div>
 
-            <div className="p-3 rounded-2xl bg-card/60 border border-border/80 text-center">
-              <div className="text-2xl font-black text-primary">{stats.totalRequests}</div>
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 flex items-center justify-center gap-1">
-                <Radio size={12} className="text-primary" /> Active Requests
-              </div>
+          <div className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5">
+            <div className="text-2xl font-black text-primary">{stats.totalRequests}</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
+              <Radio size={12} className="text-primary" /> Active Requests
             </div>
+          </div>
 
-            <div className="p-3 rounded-2xl bg-card/60 border border-border/80 text-center">
-              <div className="text-2xl font-black text-emerald-400">{stats.livesSaved}</div>
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 flex items-center justify-center gap-1">
-                <HandHeart size={12} className="text-emerald-400" /> Lives Saved
-              </div>
+          <div className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5">
+            <div className="text-2xl font-black text-emerald-500">{stats.livesSaved}</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
+              <HandHeart size={12} className="text-emerald-500" /> Lives Saved
             </div>
+          </div>
 
-            <div className="p-3 rounded-2xl bg-card/60 border border-border/80 text-center">
-              <div className="text-2xl font-black text-amber-400">{stats.avgResponseTime}</div>
-              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 flex items-center justify-center gap-1">
-                <Zap size={12} className="text-amber-400" /> Avg Match Time
-              </div>
+          <div className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5">
+            <div className="text-2xl font-black text-amber-500">{stats.avgResponseTime}</div>
+            <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
+              <Zap size={12} className="text-amber-500" /> Avg Match Time
             </div>
           </div>
         </div>
