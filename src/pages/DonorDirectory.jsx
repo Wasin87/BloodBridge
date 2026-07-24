@@ -141,6 +141,8 @@ export default function DonorDirectory() {
             const dept = donor.university || donor.department || donor.district || 'Campus Donor';
             const lastDonated = donor.last_donation_date ? new Date(donor.last_donation_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Never Donated / New Donor';
             const isMyCard = user && (donor.user_id === user.id || donor.users?.email === user.email);
+            const savedAvatar = isMyCard && user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null;
+            const cardAvatar = (isMyCard ? (user?.avatar_url || savedAvatar) : null) || donor.avatar_url || donor.users?.avatar_url || `https://images.unsplash.com/photo-${1534528741775 + (donor.id?.charCodeAt(0) || 0) * 10}?auto=format&fit=crop&w=150&q=80`;
 
             return (
               <Card key={donor.id} className="rounded-3xl border-border bg-card/90 p-5 shadow-xl hover:border-primary/40 transition-all flex flex-col justify-between">
@@ -150,7 +152,7 @@ export default function DonorDirectory() {
                     <div className="relative">
                       <div className={`h-16 w-16 rounded-full overflow-hidden border-2 p-0.5 ${isAvailable ? 'border-emerald-400 ring-4 ring-emerald-400/20' : 'border-slate-700'}`}>
                         <img 
-                          src={donor.avatar_url || donor.users?.avatar_url || `https://images.unsplash.com/photo-${1534528741775 + (donor.id?.charCodeAt(0) || 0) * 10}?auto=format&fit=crop&w=150&q=80`} 
+                          src={cardAvatar} 
                           alt={name}
                           className="h-full w-full object-cover rounded-full"
                           onError={(e) => {

@@ -17,6 +17,7 @@ export default function DonorDetailsModal({ donor, isOpen, onClose }) {
 
   const name = donor.users?.full_name || 'Campus Donor';
   const bloodType = donor.blood_group || 'O+';
+  const { user } = useAuthStore();
   const isAvailable = donor.is_available !== false;
   const phone = donor.phone || donor.contact_number || donor.users?.phone || '';
   const email = donor.users?.email || '';
@@ -27,7 +28,10 @@ export default function DonorDetailsModal({ donor, isOpen, onClose }) {
   const lastDonation = donor.last_donation_date 
     ? new Date(donor.last_donation_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) 
     : 'None / 3+ Months Ago';
-  const avatarUrl = donor.avatar_url || donor.users?.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80`;
+
+  const isMyCard = user && (donor.user_id === user.id || donor.users?.email === user.email);
+  const savedAvatar = isMyCard && user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null;
+  const avatarUrl = (isMyCard ? (user?.avatar_url || savedAvatar) : null) || donor.avatar_url || donor.users?.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80`;
 
   const cleanPhoneNum = (p) => p.replace(/[^0-9]/g, '');
 

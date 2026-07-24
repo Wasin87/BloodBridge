@@ -1299,29 +1299,57 @@ CREATE INDEX IF NOT EXISTS idx_blood_request_accept_request_id ON public.blood_r
                     (u.full_name || '').toLowerCase().includes(userSearch.toLowerCase()) ||
                     (u.email || '').toLowerCase().includes(userSearch.toLowerCase()) ||
                     (u.role || '').toLowerCase().includes(userSearch.toLowerCase())
-                  ).map((u) => (
-                    <div 
-                      key={u.id} 
-                      className="p-4 rounded-2xl bg-secondary/30 border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:bg-secondary/60"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-sm text-foreground">{u.full_name || 'Campus User'}</span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                            u.role === 'admin' 
-                              ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' 
-                              : u.role === 'suspended' 
-                                ? 'bg-rose-950 text-rose-400 border border-rose-800' 
-                                : 'bg-primary/10 text-primary border border-primary/20'
-                          }`}>
-                            {u.role ? u.role.toUpperCase() : 'USER'}
-                          </span>
-                          <span className="text-xs text-muted-foreground font-medium">({u.blood_group || 'No Blood Group'})</span>
+                  ).map((u) => {
+                    const isMe = user && u.id === user.id;
+                    const savedAvatar = isMe && user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null;
+                    const photoOffset = u.id ? u.id.charCodeAt(0) * 10 : 0;
+                    const defaultAvatar = 'https://images.unsplash.com/photo-' + (1534528741775 + photoOffset) + '?auto=format&fit=crop&w=150&q=80';
+                    const uAvatar = (isMe ? (user?.avatar_url || savedAvatar) : null) || u.avatar_url || defaultAvatar;
+
+                    return (
+                      <div 
+                        key={u.id} 
+                        className="p-4 rounded-2xl bg-secondary/30 border border-border/80 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:bg-secondary/60"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img 
+                            src={uAvatar} 
+                            alt={u.full_name || 'User'} 
+                            className="h-10 w-10 rounded-full object-cover border border-border shrink-0" 
+                            onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'; }} 
+                          />
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-sm text-foreground">{u.full_name || 'Campus User'}</span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                u.role === 'admin' 
+                                  ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' 
+                                  : u.role === 'suspended' 
+                                    ? 'bg-rose-950 text-rose-400 border border-rose-800' 
+                                    : 'bg-primary/10 text-primary border border-primary/20'
+                              }`}>
+                                {u.role ? u.role.toUpperCase() : 'USER'}
+                              </span>
+                              {u.blood_group ? (
+                                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-500 border border-rose-500/30 flex items-center gap-1">
+                                  🩸 {u.blood_group}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground font-medium">(No Blood Group)</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground leading-relaxed flex items-center gap-2 flex-wrap">
+                              <span>📧 {u.email}</span>
+                              {u.phone ? (
+                                <span>• 📞 <a href={`tel:${u.phone}`} className="font-semibold text-foreground hover:underline">{u.phone}</a></span>
+                              ) : (
+                                <span>• 📞 No phone</span>
+                              )}
+                              <span>• 📍 {u.district || 'Dhaka'}</span>
+                              <span>• 🎓 {u.university || 'General'}</span>
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          📧 {u.email} • 📞 {u.phone || 'No phone number'} • 📍 {u.district || 'Dhaka'} • 🎓 {u.university || 'General'}
-                        </p>
-                      </div>
 
                       <div className="flex items-center gap-2 shrink-0">
                         {u.role === 'suspended' ? (
@@ -1357,7 +1385,8 @@ CREATE INDEX IF NOT EXISTS idx_blood_request_accept_request_id ON public.blood_r
                         )}
                       </div>
                     </div>
-                  ))
+                  );
+                })
                 )}
               </div>
             </Card>

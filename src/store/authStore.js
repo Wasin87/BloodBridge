@@ -25,7 +25,12 @@ export const useAuthStore = create((set) => ({
       if (token) {
         const { data } = await api.get('/auth/me');
         if (data && data.success && data.user) {
-          set({ user: data.user, profile: data.user });
+          const cachedAvatar = data.user.id ? localStorage.getItem(`user_avatar_${data.user.id}`) : null;
+          const mergedUser = {
+            ...data.user,
+            avatar_url: data.user.avatar_url || cachedAvatar || null
+          };
+          set({ user: mergedUser, profile: mergedUser });
         } else {
           localStorage.removeItem('bloodbridge_token');
         }
@@ -43,7 +48,12 @@ export const useAuthStore = create((set) => ({
     try {
       const { data } = await api.get('/auth/me');
       if (data && data.success && data.user) {
-        set({ profile: data.user });
+        const cachedAvatar = data.user.id ? localStorage.getItem(`user_avatar_${data.user.id}`) : null;
+        const mergedUser = {
+          ...data.user,
+          avatar_url: data.user.avatar_url || cachedAvatar || null
+        };
+        set({ profile: mergedUser, user: mergedUser });
       }
     } catch (error) {
       console.error('Error fetching backend user profile:', error);
@@ -56,6 +66,9 @@ export const useAuthStore = create((set) => ({
 
     try {
       await api.put('/users/profile/name', { fullName: newName.trim() });
+      if (user.id) {
+        localStorage.setItem(`user_name_${user.id}`, newName.trim());
+      }
       set({
         user: {
           ...user,
@@ -73,22 +86,38 @@ export const useAuthStore = create((set) => ({
 
   updateAvatarUrl: async (avatarUrl) => {
     const { user, profile } = useAuthStore.getState();
-    if (!user) return;
+    if (!user) return { success: false, error: 'User not logged in' };
     
     try {
-      await api.put('/users/profile/avatar', { avatarUrl });
+      const res = await api.put('/users/profile/avatar', { avatarUrl });
+      const finalAvatar = (res.data && res.data.avatar_url) ? res.data.avatar_url : avatarUrl;
+
+      if (user.id) {
+        localStorage.setItem(`user_avatar_${user.id}`, finalAvatar);
+      }
+
       set({
         user: {
           ...user,
-          avatar_url: avatarUrl
+          avatar_url: finalAvatar
         },
         profile: {
           ...profile,
-          avatar_url: avatarUrl
+          avatar_url: finalAvatar
         }
       });
+
+      return { success: true, avatar_url: finalAvatar };
     } catch (err) {
-      console.warn('Could not update avatar URL on backend:', err);
+      console.warn('Could not update avatar URL on backend, falling back to client cache:', err);
+      if (user.id) {
+        localStorage.setItem(`user_avatar_${user.id}`, avatarUrl);
+      }
+      set({
+        user: { ...user, avatar_url: avatarUrl },
+        profile: { ...profile, avatar_url: avatarUrl }
+      });
+      return { success: true, avatar_url: avatarUrl, fallback: true };
     }
   },
 
@@ -98,8 +127,13 @@ export const useAuthStore = create((set) => ({
       if (data && data.success) {
         const { token, user } = data;
         localStorage.setItem('bloodbridge_token', token);
-        set({ user, profile: user });
-        return user;
+        const cachedAvatar = user.id ? localStorage.getItem(`user_avatar_${user.id}`) : null;
+        const mergedUser = {
+          ...user,
+          avatar_url: user.avatar_url || cachedAvatar || null
+        };
+        set({ user: mergedUser, profile: mergedUser });
+        return mergedUser;
       }
       throw new Error('Sign in returned unsuccessful.');
     } catch (error) {

@@ -38,15 +38,30 @@ export const updateAvatarUrl = async (req, res, next) => {
 
     const { error } = await supabase
       .from('users')
-      .update({ avatar_url: avatarUrl })
+      .update({ 
+        avatar_url: avatarUrl,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', userId);
 
     if (error) {
+      console.error('Database error updating avatar in users:', error.message);
       return res.status(400).json({ success: false, message: error.message });
+    }
+
+    // Touch donor_profiles if user has a profile record
+    try {
+      await supabase
+        .from('donor_profiles')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('user_id', userId);
+    } catch (e) {
+      console.warn('Note updating donor_profiles for avatar:', e.message);
     }
 
     return res.status(200).json({
       success: true,
+      avatar_url: avatarUrl,
       message: 'Avatar updated successfully.'
     });
   } catch (err) {

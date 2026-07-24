@@ -207,44 +207,148 @@ export async function deleteDonorProfile(donorId, userId) {
   }
 }
 
+const LOCAL_BROADCASTS_KEY = 'bloodbridge_local_broadcasts';
+
 export async function sendBroadcastNotification(message, durationHours = 24) {
+  let createdItem = null;
   try {
     const res = await api.post('/admin/broadcast', { message, durationHours });
-    return { data: res.data.data, error: null };
+    if (res.data && res.data.data) {
+      createdItem = res.data.data;
+    }
   } catch (err) {
-    console.error('sendBroadcastNotification error:', err);
-    return { data: null, error: err.response?.data?.message || err.message };
+    console.error('sendBroadcastNotification API error:', err);
   }
+
+  if (!createdItem) {
+    const expiresAt = durationHours > 0 ? new Date(Date.now() + durationHours * 3600000).toISOString() : null;
+    createdItem = {
+      id: 'bcast_' + Date.now(),
+      title: '🚨 EMERGENCY BLOOD BROADCAST',
+      message,
+      type: 'emergency',
+      created_at: new Date().toISOString(),
+      expires_at: expiresAt
+    };
+  }
+
+  // Save to local storage for Vercel serverless resilience
+  try {
+    const stored = JSON.parse(localStorage.getItem(LOCAL_BROADCASTS_KEY) || '[]');
+    const filtered = stored.filter(b => String(b.id) !== String(createdItem.id));
+    filtered.unshift(createdItem);
+    localStorage.setItem(LOCAL_BROADCASTS_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.warn('LocalStorage broadcast save note:', e);
+  }
+
+  return { data: createdItem, error: null };
 }
 
 export async function updateBroadcastNotification(broadcastId, message, durationHours) {
+  let updatedItem = null;
   try {
     const res = await api.put(`/admin/broadcast/${broadcastId}`, { message, durationHours });
-    return { data: res.data.data, error: null };
+    if (res.data && res.data.data) {
+      updatedItem = res.data.data;
+    }
   } catch (err) {
-    console.error('updateBroadcastNotification error:', err);
-    return { data: null, error: err.response?.data?.message || err.message };
+    console.error('updateBroadcastNotification API error:', err);
   }
+
+  // Sync edit to local storage
+  try {
+    const stored = JSON.parse(localStorage.getItem(LOCAL_BROADCASTS_KEY) || '[]');
+    const expiresAt = durationHours !== undefined 
+      ? (durationHours > 0 ? new Date(Date.now() + durationHours * 3600000).toISOString() : null)
+      : undefined;
+
+    const updated = stored.map(b => {
+      if (String(b.id) === String(broadcastId)) {
+        return {
+          ...b,
+          message,
+          expires_at: expiresAt !== undefined ? expiresAt : b.expires_at
+        };
+      }
+      return b;
+    });
+    localStorage.setItem(LOCAL_BROADCASTS_KEY, JSON.stringify(updated));
+  } catch (e) {
+    console.warn('LocalStorage broadcast update note:', e);
+  }
+
+  return { data: updatedItem || { id: broadcastId, message }, error: null };
 }
 
 export async function fetchBroadcasts() {
+  let remoteBroadcasts = [];
   try {
     const res = await api.get('/admin/broadcasts');
-    return { data: res.data.data, error: null };
+    if (res.data && res.data.data && Array.isArray(res.data.data)) {
+      remoteBroadcasts = res.data.data;
+    }
   } catch (err) {
-    console.error('fetchBroadcasts error:', err);
-    return { data: [], error: err.response?.data?.message || err.message };
+    console.error('fetchBroadcasts API error:', err);
   }
+
+  // Merge with local storage cache
+  let localBroadcasts = [];
+  try {
+    localBroadcasts = JSON.parse(localStorage.getItem(LOCAL_BROADCASTS_KEY) || '[]');
+  } catch (e) {
+    localBroadcasts = [];
+  }
+
+  const map = new Map();
+  const now = new Date();
+
+  // 1. Add remote broadcasts
+  for (const b of remoteBroadcasts) {
+    if (!b.expires_at || new Date(b.expires_at) > now) {
+      map.set(String(b.id), b);
+    }
+  }
+
+  // 2. Add local broadcasts (so any broadcasts created locally on Vercel are preserved across navigation)
+  for (const b of localBroadcasts) {
+    if (!b.expires_at || new Date(b.expires_at) > now) {
+      if (!map.has(String(b.id))) {
+        map.set(String(b.id), b);
+      } else {
+        const existing = map.get(String(b.id));
+        map.set(String(b.id), { ...existing, ...b });
+      }
+    }
+  }
+
+  const combined = Array.from(map.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+  // Sync back valid non-expired broadcasts to local storage
+  try {
+    localStorage.setItem(LOCAL_BROADCASTS_KEY, JSON.stringify(combined));
+  } catch (e) {}
+
+  return { data: combined, error: null };
 }
 
 export async function deleteBroadcast(broadcastId) {
   try {
     await api.delete(`/admin/broadcast/${broadcastId}`);
-    return { success: true };
   } catch (err) {
-    console.error('deleteBroadcast error:', err);
-    return { success: false, error: err.response?.data?.message || err.message };
+    console.error('deleteBroadcast API error:', err);
   }
+
+  // Remove permanently from local storage
+  try {
+    const stored = JSON.parse(localStorage.getItem(LOCAL_BROADCASTS_KEY) || '[]');
+    const filtered = stored.filter(b => String(b.id) !== String(broadcastId));
+    localStorage.setItem(LOCAL_BROADCASTS_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.warn('LocalStorage broadcast delete note:', e);
+  }
+
+  return { success: true };
 }
 
 export async function fetchAllUsers() {

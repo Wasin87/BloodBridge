@@ -77,7 +77,49 @@ export default function Profile() {
     }
   };
 
-  const handleFileUpload = (e) => {
+  const compressImageFile = (file, maxWidth = 500, quality = 0.85) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxWidth) {
+              width = Math.round((width * maxWidth) / height);
+              height = maxWidth;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressedDataUrl);
+          } else {
+            resolve(e.target?.result);
+          }
+        };
+        img.onerror = (err) => reject(err);
+        img.src = e.target?.result;
+      };
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -86,27 +128,47 @@ export default function Profile() {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image size should be less than 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size should be less than 10MB');
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const base64Url = event.target?.result;
-      if (base64Url) {
-        await updateAvatarUrl(base64Url);
+    const toastId = toast.loading('Uploading and processing profile photo...');
+
+    try {
+      const compressedBase64 = await compressImageFile(file, 500, 0.85);
+      const res = await updateAvatarUrl(compressedBase64);
+      toast.dismiss(toastId);
+
+      if (res.success) {
         toast.success('Profile photo updated successfully!');
         setShowAvatarPicker(false);
+        fetchDonorProfile();
+      } else {
+        toast.error(res.error || 'Failed to update profile photo');
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      toast.dismiss(toastId);
+      console.error('Error uploading avatar:', err);
+      toast.error('Could not process photo. Please try another image.');
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const handleSelectPreset = async (url) => {
-    await updateAvatarUrl(url);
-    toast.success('Profile picture updated!');
-    setShowAvatarPicker(false);
+    const toastId = toast.loading('Updating profile picture...');
+    const res = await updateAvatarUrl(url);
+    toast.dismiss(toastId);
+    if (res.success) {
+      toast.success('Profile picture updated!');
+      setShowAvatarPicker(false);
+      fetchDonorProfile();
+    } else {
+      toast.error(res.error || 'Failed to update profile picture');
+    }
   };
 
   const handleApplyCustomUrl = async () => {
@@ -114,10 +176,17 @@ export default function Profile() {
       toast.error('Please enter an image URL');
       return;
     }
-    await updateAvatarUrl(customImageUrl.trim());
-    toast.success('Profile image updated from URL!');
-    setCustomImageUrl('');
-    setShowAvatarPicker(false);
+    const toastId = toast.loading('Updating profile picture...');
+    const res = await updateAvatarUrl(customImageUrl.trim());
+    toast.dismiss(toastId);
+    if (res.success) {
+      toast.success('Profile image updated from URL!');
+      setCustomImageUrl('');
+      setShowAvatarPicker(false);
+      fetchDonorProfile();
+    } else {
+      toast.error(res.error || 'Failed to update profile picture');
+    }
   };
 
   if (loading) {
@@ -135,7 +204,8 @@ export default function Profile() {
   const name = rawName ? (rawName.charAt(0).toUpperCase() + rawName.slice(1)) : 'Campus Donor';
   const campus = donorProfile?.university || 'Heritage University • Student';
   const bloodType = donorProfile?.blood_group || 'O+';
-  const currentAvatar = profile?.avatar_url || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80';
+  const savedAvatar = user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null;
+  const currentAvatar = profile?.avatar_url || user?.avatar_url || savedAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80';
 
   const handleSaveName = async () => {
     if (!editedName.trim()) return;

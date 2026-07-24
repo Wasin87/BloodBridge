@@ -63,7 +63,8 @@ export default function MainLayout() {
     : (user?.user_metadata?.full_name || user?.user_metadata?.name || savedName || (isAdmin ? 'Wasin Ahmed' : (user?.email ? user.email.split('@')[0] : 'Campus Donor')));
   const userName = rawName ? (rawName.charAt(0).toUpperCase() + rawName.slice(1)) : 'Campus Donor';
   const firstName = userName.split(' ')[0] || 'Campus';
-  const userAvatar = profile?.avatar_url || null;
+  const savedAvatar = user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null;
+  const userAvatar = profile?.avatar_url || user?.avatar_url || savedAvatar || null;
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col transition-colors duration-300 font-sans">

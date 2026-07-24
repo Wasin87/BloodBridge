@@ -166,7 +166,9 @@ export default function RequestDirectory() {
           const progressPercent = Math.min(100, (fulfilledUnits / unitsNeeded) * 100);
           const patientName = req.patient_name || req.contact_person || 'Emergency Patient';
           const hospital = req.hospital_name || (req.district ? `${req.district} Medical Hospital` : 'Hospital Not Specified');
-          const avatarUrl = req.avatar_url || req.users?.avatar_url || `https://images.unsplash.com/photo-${1534528741775 + (req.id?.charCodeAt(0) || 0) * 10}?auto=format&fit=crop&w=150&q=80`;
+          const isMyReq = user && req.user_id === user.id;
+          const savedAvatar = isMyReq && user?.id ? localStorage.getItem(`user_avatar_${user.id}`) : null;
+          const avatarUrl = (isMyReq ? (user?.avatar_url || savedAvatar) : null) || req.avatar_url || req.users?.avatar_url || `https://images.unsplash.com/photo-${1534528741775 + (req.id?.charCodeAt(0) || 0) * 10}?auto=format&fit=crop&w=150&q=80`;
 
           const urgencyText = isONegative ? 'O- CRITICAL' : isCritical ? 'CRITICAL' : isUrgent ? 'URGENT' : 'NORMAL';
 

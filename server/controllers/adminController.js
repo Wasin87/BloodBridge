@@ -494,7 +494,7 @@ export const deleteBroadcast = async (req, res, next) => {
 
 export const fetchUsers = async (req, res, next) => {
   try {
-    const { data, error } = await supabase
+    const { data: usersData, error } = await supabase
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
@@ -507,9 +507,38 @@ export const fetchUsers = async (req, res, next) => {
       });
     }
 
+    // Try fetching donor profiles to enrich phone, blood group, avatar, etc.
+    let donorMap = new Map();
+    try {
+      const { data: donorsData } = await supabase
+        .from('donor_profiles')
+        .select('*');
+      if (donorsData) {
+        for (const d of donorsData) {
+          if (d.user_id) donorMap.set(String(d.user_id), d);
+          if (d.users && d.users.email) donorMap.set(String(d.users.email), d);
+        }
+      }
+    } catch (e) {
+      console.warn('fetchUsers donor_profiles enrich note:', e.message);
+    }
+
+    const enrichedUsers = (usersData || []).map(u => {
+      const dp = donorMap.get(String(u.id)) || donorMap.get(String(u.email)) || {};
+      return {
+        ...u,
+        full_name: u.full_name || dp.full_name || dp.name || (u.email ? u.email.split('@')[0] : 'Campus User'),
+        phone: u.phone || dp.phone || dp.contact_number || '',
+        blood_group: u.blood_group || dp.blood_group || '',
+        avatar_url: u.avatar_url || dp.avatar_url || null,
+        district: u.district || dp.district || dp.location || 'Dhaka',
+        university: u.university || dp.university || dp.department || 'General'
+      };
+    });
+
     return res.status(200).json({
       success: true,
-      data: data || []
+      data: enrichedUsers
     });
   } catch (err) {
     console.warn('fetchUsers catch warning:', err.message);
