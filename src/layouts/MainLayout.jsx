@@ -280,7 +280,7 @@ export default function MainLayout() {
 
       {/* Mobile Bottom Navigation */}
       {user && (
-        <nav className="fixed bottom-0 left-0 right-0 border-t border-border/80 bg-background/95 backdrop-blur-2xl z-40 pb-safe shadow-2xl">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border/80 bg-background/95 backdrop-blur-2xl z-40 pb-safe shadow-2xl">
           <div className="flex items-center justify-around h-16 max-w-md mx-auto px-2">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
