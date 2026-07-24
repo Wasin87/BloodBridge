@@ -1,0 +1,6 @@
+{
+  "name": "BloodBridge",
+  "description": "BloodBridge - Save lives by connecting blood donors and emergency requests.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
