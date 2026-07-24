@@ -65,7 +65,7 @@ export default function Dashboard() {
                 </div>
                 <div className="space-y-1 z-10 flex-1">
                   <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="text-[9px] font-black tracking-widest bg-rose-600 text-white px-2 py-0.5 rounded-full uppercase">
+                    <span className="text-[9px] font-black tracking-widest bg-rose-600 text-white px-2 py-0.5 rounded-full uppercase whitespace-nowrap shrink-0">
                       {bcast.type || 'EMERGENCY BROADCAST'}
                     </span>
                     <span className="text-[10px] text-rose-500/80 font-mono font-bold">
@@ -214,14 +214,14 @@ export default function Dashboard() {
 
       {/* Recent Urgent Requests Section with Circle Profile Avatars */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xl font-bold tracking-tight text-foreground">Urgent Emergency Requests</h3>
-            <span className="px-2.5 py-0.5 rounded-full bg-primary text-[10px] font-black uppercase text-primary-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Urgent Emergency Requests</h3>
+            <span className="px-2.5 py-0.5 rounded-full bg-primary text-[10px] font-black uppercase text-primary-foreground whitespace-nowrap shrink-0">
               HIGH PRIORITY
             </span>
           </div>
-          <Button variant="link" onClick={() => navigate('/requests')} className="text-xs font-semibold text-primary p-0">
+          <Button variant="link" onClick={() => navigate('/requests')} className="text-xs font-semibold text-primary p-0 h-auto self-start sm:self-auto">
             View All Requests
           </Button>
         </div>

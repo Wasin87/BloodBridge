@@ -192,7 +192,7 @@ export default function RequestDirectory() {
                   </div>
 
                   <div className="text-right space-y-1 shrink-0">
-                    <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    <div className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap shrink-0 ${
                       isONegative
                         ? 'bg-rose-500/15 border border-rose-500/40 text-rose-500'
                         : isCritical 
@@ -285,7 +285,7 @@ export default function RequestDirectory() {
                   />
                 </div>
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-[10px] uppercase mb-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold text-[10px] uppercase mb-1 whitespace-nowrap shrink-0">
                     <AlertCircle size={10} /> {selectedReq.urgency || 'URGENT'}
                   </div>
                   <h2 className="text-xl font-black text-foreground">{selectedReq.patient_name}</h2>

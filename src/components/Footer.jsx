@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
-import { Heart, Phone, Mail, MapPin, ShieldCheck, HeartPulse, ExternalLink, Award } from 'lucide-react';
+import { Heart, Phone, Mail, MapPin, ShieldCheck, HeartPulse, ExternalLink, Award, Code2 } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -97,10 +97,13 @@ export default function Footer() {
 
         {/* Bottom Copyright and Credits */}
         <div className="pt-6 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <span>Built with</span>
-            <Heart size={14} className="text-rose-500 fill-rose-500 inline" />
-            <span className="font-semibold text-foreground">for Campus Life & Medical Emergency Response</span>
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-rose-500/80 shrink-0" />
+            <span className="text-muted-foreground font-medium">Created By Developer:</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-2xl bg-secondary/80 border border-border/80 text-foreground font-black shadow-sm transition-all hover:bg-secondary hover:border-primary/20">
+              <Code2 size={12} className="text-primary" />
+              <span>Md Wasin Ahmed</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">

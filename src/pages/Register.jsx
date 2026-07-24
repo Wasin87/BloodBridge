@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { HeartPulse, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import Logo from '../components/Logo';
 
 export default function Register() {
   const [fullName, setFullName] = useState('');
@@ -39,10 +40,9 @@ export default function Register() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
-      <div className="absolute top-8 left-8 flex items-center gap-2">
-        <HeartPulse className="h-6 w-6 text-primary" />
-        <span className="text-xl font-bold">BloodBridge</span>
-      </div>
+      <Link to="/" className="absolute top-8 left-8 hover:opacity-85 transition-opacity inline-block z-50">
+        <Logo size="md" />
+      </Link>
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}

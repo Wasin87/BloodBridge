@@ -80,7 +80,7 @@ export default function DonorDetailsModal({ donor, isOpen, onClose }) {
                   <MapPin size={12} className="text-primary shrink-0" /> {district}, {upazila}
                 </span>
                 <span>•</span>
-                <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] uppercase ${
+                <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] uppercase whitespace-nowrap shrink-0 ${
                   isAvailable ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-muted text-muted-foreground'
                 }`}>
                   {isAvailable ? 'Available Now' : 'Currently Reserved'}
