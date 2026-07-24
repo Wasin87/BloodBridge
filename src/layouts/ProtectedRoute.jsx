@@ -38,10 +38,8 @@ export default function ProtectedRoute() {
           </div>
           <button
             onClick={() => {
-              import('../lib/supabase').then(({ supabase }) => {
-                supabase.auth.signOut().then(() => {
-                  window.location.href = '/login';
-                });
+              useAuthStore.getState().signOut().then(() => {
+                window.location.href = '/login';
               });
             }}
             className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition-colors shadow-md"

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { supabase } from '../lib/supabase';
-import { fetchUserNotifications, fetchDonationHistory } from '../lib/db';
+import { fetchUserNotifications, fetchDonationHistory, fetchMyDonorProfile, updateDonorAvailability } from '../lib/db';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -51,11 +50,7 @@ export default function Profile() {
 
   const fetchDonorProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('donor_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const { data, error } = await fetchMyDonorProfile(user.id);
       
       if (!error && data) {
         setDonorProfile(data);
@@ -75,10 +70,7 @@ export default function Profile() {
 
     if (donorProfile) {
       try {
-        await supabase
-          .from('donor_profiles')
-          .update({ is_available: newStatus })
-          .eq('id', donorProfile.id);
+        await updateDonorAvailability(donorProfile.id, user.id, newStatus);
       } catch (err) {
         console.error(err);
       }

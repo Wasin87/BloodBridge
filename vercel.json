@@ -2,6 +2,10 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    },
+    {
       "source": "/((?!assets/|.*\\.[a-zA-Z0-9]+$).*)",
       "destination": "/index.html"
     }
