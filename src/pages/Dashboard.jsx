@@ -20,6 +20,15 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
+    const fetchActiveBroadcasts = async () => {
+      const bcastsRes = await fetchBroadcasts();
+      if (bcastsRes.data) {
+        const now = new Date();
+        const activeOnly = bcastsRes.data.filter(b => !b.expires_at || new Date(b.expires_at) > now);
+        setBroadcasts(activeOnly);
+      }
+    };
+
     const loadData = async () => {
       const res = await fetchBloodRequests({});
       if (res.data) {
@@ -28,12 +37,16 @@ export default function Dashboard() {
       const liveStats = await fetchPlatformStats();
       setStats(liveStats);
       
-      const bcastsRes = await fetchBroadcasts();
-      if (bcastsRes.data) {
-        setBroadcasts(bcastsRes.data);
-      }
+      await fetchActiveBroadcasts();
     };
     loadData();
+
+    // Auto-refresh broadcast alerts every 5 seconds for instant real-time synchronization
+    const interval = setInterval(() => {
+      fetchActiveBroadcasts();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const floatingBadges = [

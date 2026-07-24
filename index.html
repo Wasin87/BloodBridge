@@ -4,6 +4,35 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BloodBridge</title>
+    <script>
+      // Suppress benign Vite WebSocket/HMR connection errors in the preview sandbox
+      window.addEventListener('error', function(event) {
+        if (
+          event.message && (
+            event.message.indexOf('WebSocket') !== -1 ||
+            event.message.indexOf('[vite]') !== -1 ||
+            event.message.indexOf('websocket') !== -1
+          )
+        ) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(event) {
+        if (event.reason) {
+          const reasonStr = String(event.reason);
+          if (
+            reasonStr.indexOf('WebSocket') !== -1 ||
+            reasonStr.indexOf('websocket') !== -1 ||
+            reasonStr.indexOf('Vite') !== -1
+          ) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>

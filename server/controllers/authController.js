@@ -113,6 +113,7 @@ export const login = async (req, res, next) => {
     // Fetch user profile to get exact role
     let role = 'user';
     let fullName = user.user_metadata?.full_name || '';
+    let avatarUrl = null;
 
     try {
       const { data: dbUser } = await supabase
@@ -124,6 +125,7 @@ export const login = async (req, res, next) => {
       if (dbUser) {
         role = dbUser.role || 'user';
         fullName = dbUser.full_name || fullName;
+        avatarUrl = dbUser.avatar_url || null;
       }
     } catch (err) {
       console.warn('Could not fetch user profile details on login, resorting to auth metadata:', err);
@@ -157,7 +159,8 @@ export const login = async (req, res, next) => {
         id: user.id,
         email: user.email,
         full_name: fullName,
-        role
+        role,
+        avatar_url: avatarUrl
       }
     });
   } catch (err) {

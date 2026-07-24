@@ -82,14 +82,32 @@ export const fetchDonationHistory = async (req, res, next) => {
     const userId = req.user.id;
 
     // Fetch requests created by user or accepted by user
-    const { data: requests, error } = await supabase
+    let requests;
+    let queryResult = await supabase
       .from('blood_requests')
       .select('*')
       .or(`user_id.eq.${userId},accepted_donor_id.eq.${userId}`)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      return res.status(400).json({ success: false, message: error.message });
+    if (queryResult.error) {
+      const errMessage = queryResult.error.message || '';
+      if (errMessage.includes('accepted_donor_id') || errMessage.includes('column')) {
+        console.warn('Database fallback: accepted_donor_id column is missing. Querying only user_id.');
+        const fallbackResult = await supabase
+          .from('blood_requests')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (fallbackResult.error) {
+          return res.status(400).json({ success: false, message: fallbackResult.error.message });
+        }
+        requests = fallbackResult.data;
+      } else {
+        return res.status(400).json({ success: false, message: queryResult.error.message });
+      }
+    } else {
+      requests = queryResult.data;
     }
 
     // Format like local storage histories

@@ -88,7 +88,10 @@ export default function RequestDirectory() {
       });
       fetchRequests();
     } catch (err) {
-      toast.error('Failed to accept request.');
+      const displayMsg = typeof err === 'string' ? err : (err?.message || 'Failed to accept request.');
+      toast.error(displayMsg, {
+        duration: 10000
+      });
       console.error(err);
     } finally {
       setAcceptingId(null);

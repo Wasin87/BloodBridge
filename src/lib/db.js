@@ -207,12 +207,22 @@ export async function deleteDonorProfile(donorId, userId) {
   }
 }
 
-export async function sendBroadcastNotification(message) {
+export async function sendBroadcastNotification(message, durationHours = 24) {
   try {
-    const res = await api.post('/admin/broadcast', { message });
+    const res = await api.post('/admin/broadcast', { message, durationHours });
     return { data: res.data.data, error: null };
   } catch (err) {
     console.error('sendBroadcastNotification error:', err);
+    return { data: null, error: err.response?.data?.message || err.message };
+  }
+}
+
+export async function updateBroadcastNotification(broadcastId, message, durationHours) {
+  try {
+    const res = await api.put(`/admin/broadcast/${broadcastId}`, { message, durationHours });
+    return { data: res.data.data, error: null };
+  } catch (err) {
+    console.error('updateBroadcastNotification error:', err);
     return { data: null, error: err.response?.data?.message || err.message };
   }
 }
@@ -234,5 +244,55 @@ export async function deleteBroadcast(broadcastId) {
   } catch (err) {
     console.error('deleteBroadcast error:', err);
     return { success: false, error: err.response?.data?.message || err.message };
+  }
+}
+
+export async function fetchAllUsers() {
+  try {
+    const res = await api.get('/admin/users');
+    return { data: res.data.data, error: null };
+  } catch (err) {
+    console.error('fetchAllUsers error:', err);
+    return { data: [], error: err.response?.data?.message || err.message };
+  }
+}
+
+export async function suspendUserDirect(userId) {
+  try {
+    const res = await api.put(`/admin/users/${userId}/suspend`);
+    return { success: true };
+  } catch (err) {
+    console.error('suspendUserDirect error:', err);
+    return { success: false, error: err.response?.data?.message || err.message };
+  }
+}
+
+export async function unsuspendUserDirect(userId) {
+  try {
+    const res = await api.put(`/admin/users/${userId}/unsuspend`);
+    return { success: true };
+  } catch (err) {
+    console.error('unsuspendUserDirect error:', err);
+    return { success: false, error: err.response?.data?.message || err.message };
+  }
+}
+
+export async function deleteUserDirect(userId) {
+  try {
+    const res = await api.delete(`/admin/users/${userId}`);
+    return { success: true };
+  } catch (err) {
+    console.error('deleteUserDirect error:', err);
+    return { success: false, error: err.response?.data?.message || err.message };
+  }
+}
+
+export async function fetchAcceptedRequests() {
+  try {
+    const res = await api.get('/admin/accepted-requests');
+    return { data: res.data.data, error: null };
+  } catch (err) {
+    console.error('fetchAcceptedRequests error:', err);
+    return { data: [], error: err.response?.data?.message || err.message };
   }
 }

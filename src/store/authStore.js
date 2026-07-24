@@ -57,6 +57,10 @@ export const useAuthStore = create((set) => ({
     try {
       await api.put('/users/profile/name', { fullName: newName.trim() });
       set({
+        user: {
+          ...user,
+          full_name: newName.trim()
+        },
         profile: {
           ...profile,
           full_name: newName.trim()
@@ -74,6 +78,10 @@ export const useAuthStore = create((set) => ({
     try {
       await api.put('/users/profile/avatar', { avatarUrl });
       set({
+        user: {
+          ...user,
+          avatar_url: avatarUrl
+        },
         profile: {
           ...profile,
           avatar_url: avatarUrl

@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { supabase } from '../config/supabase.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'bloodbridge_jwt_secret_key_prod_1002';
 
@@ -20,6 +21,24 @@ export const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, JWT_SECRET);
+
+    // Real-time check in users table to ensure they are not suspended
+    const { data: dbUser, error: dbErr } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', decoded.id)
+      .single();
+
+    if (!dbErr && dbUser) {
+      if (dbUser.role === 'suspended') {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account has been suspended by the Admin due to community policy violations.'
+        });
+      }
+      decoded.role = dbUser.role; // Keep role in sync with database in real-time
+    }
+
     req.user = decoded; // Contains id, email, role
     next();
   } catch (error) {

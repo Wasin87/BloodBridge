@@ -42,14 +42,7 @@ export const fetchRequests = async (req, res, next) => {
     const { bloodGroup, search, excludeOwn } = req.query;
     const currentUserId = req.user?.id;
 
-    let query = supabase.from('blood_requests').select(`
-      *,
-      users (
-        full_name,
-        email,
-        avatar_url
-      )
-    `).eq('status', 'pending');
+    let query = supabase.from('blood_requests').select('*').eq('status', 'pending');
 
     if (currentUserId && excludeOwn === 'true') {
       query = query.neq('user_id', currentUserId);
@@ -61,15 +54,33 @@ export const fetchRequests = async (req, res, next) => {
       query = query.ilike('district', `%${search}%`);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    const { data: requestsData, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       return res.status(400).json({ success: false, message: error.message });
     }
 
-    const enriched = (data || []).map(r => ({
+    const requests = requestsData || [];
+    const userIds = [...new Set(requests.map(r => r.user_id).filter(Boolean))];
+
+    let usersMap = {};
+    if (userIds.length > 0) {
+      const { data: usersData, error: usersErr } = await supabase
+        .from('users')
+        .select('id, full_name, email, avatar_url')
+        .in('id', userIds);
+
+      if (!usersErr && usersData) {
+        usersData.forEach(u => {
+          usersMap[u.id] = u;
+        });
+      }
+    }
+
+    const enriched = requests.map(r => ({
       ...r,
-      avatar_url: r.users?.avatar_url || null
+      users: usersMap[r.user_id] || null,
+      avatar_url: usersMap[r.user_id]?.avatar_url || null
     }));
 
     return res.status(200).json({
@@ -184,7 +195,31 @@ export const acceptRequest = async (req, res, next) => {
       .select();
 
     if (error) {
+      const errMsg = error.message || '';
+      if (errMsg.includes('accepted_donor_id') || errMsg.includes('column')) {
+        return res.status(400).json({
+          success: false,
+          message: `Database Schema Out of Sync! Your Supabase database is missing tracking columns. Please COPY and RUN this query in your Supabase SQL Editor:\n\nALTER TABLE public.blood_requests ADD COLUMN IF NOT EXISTS accepted_donor_id UUID REFERENCES public.users(id) ON DELETE SET NULL;\nALTER TABLE public.blood_requests ADD COLUMN IF NOT EXISTS accepted_donor_info JSONB;`
+        });
+      }
       return res.status(400).json({ success: false, message: error.message });
+    }
+
+    // Save into blood_request_accept table
+    try {
+      const acceptPayload = {
+        request_id: currentReq.id,
+        donor_id: donorUser.id,
+        patient_name: currentReq.patient_name,
+        blood_group: currentReq.blood_group,
+        hospital_name: currentReq.hospital_name,
+        units: currentReq.units_needed || 1,
+        status: 'accepted',
+        accepted_at: new Date().toISOString()
+      };
+      await supabase.from('blood_request_accept').insert([acceptPayload]);
+    } catch (acceptErr) {
+      console.warn('Failed to log to blood_request_accept table:', acceptErr.message);
     }
 
     // Create Notification for request creator (receiver)
@@ -225,6 +260,16 @@ export const completeRequest = async (req, res, next) => {
     const { error: updateErr } = await supabase.from('blood_requests').update({ status: 'completed' }).eq('id', id);
     if (updateErr) {
       return res.status(400).json({ success: false, message: updateErr.message });
+    }
+
+    // Update status in blood_request_accept table
+    try {
+      await supabase
+        .from('blood_request_accept')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('request_id', id);
+    } catch (acceptUpdErr) {
+      console.warn('Failed to update blood_request_accept status:', acceptUpdErr.message);
     }
 
     // Save into donations history table

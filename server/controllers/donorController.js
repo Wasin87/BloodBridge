@@ -59,16 +59,55 @@ export const fetchProfiles = async (req, res, next) => {
       query = query.ilike('district', `%${search}%`);
     }
 
-    const { data, error } = await query.order('created_at', { ascending: false });
+    let { data, error } = await query.order('created_at', { ascending: false });
+
+    let enriched = [];
 
     if (error) {
-      return res.status(400).json({ success: false, message: error.message });
-    }
+      console.warn('Database fallback in fetchProfiles: Joint query failed, fetching separately. Error:', error.message);
+      
+      let fallbackQuery = supabase.from('donor_profiles').select('*').eq('is_available', true);
+      if (bloodGroup) {
+        fallbackQuery = fallbackQuery.eq('blood_group', bloodGroup);
+      }
+      if (search) {
+        fallbackQuery = fallbackQuery.ilike('district', `%${search}%`);
+      }
 
-    const enriched = (data || []).map(d => ({
-      ...d,
-      avatar_url: d.users?.avatar_url || null
-    }));
+      const fallbackResult = await fallbackQuery.order('created_at', { ascending: false });
+
+      if (fallbackResult.error) {
+        return res.status(400).json({ success: false, message: fallbackResult.error.message });
+      }
+
+      const profilesData = fallbackResult.data || [];
+      const userIds = [...new Set(profilesData.map(d => d.user_id).filter(Boolean))];
+
+      let usersMap = {};
+      if (userIds.length > 0) {
+        const { data: usersData, error: usersErr } = await supabase
+          .from('users')
+          .select('id, full_name, email, avatar_url')
+          .in('id', userIds);
+
+        if (!usersErr && usersData) {
+          usersData.forEach(u => {
+            usersMap[u.id] = u;
+          });
+        }
+      }
+
+      enriched = profilesData.map(d => ({
+        ...d,
+        users: usersMap[d.user_id] || null,
+        avatar_url: usersMap[d.user_id]?.avatar_url || null
+      }));
+    } else {
+      enriched = (data || []).map(d => ({
+        ...d,
+        avatar_url: d.users?.avatar_url || null
+      }));
+    }
 
     return res.status(200).json({
       success: true,
