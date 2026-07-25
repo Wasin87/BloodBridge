@@ -7,17 +7,18 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useAuthStore } from '../store/authStore';
 import ReportModal from './ReportModal';
 
 export default function DonorDetailsModal({ donor, isOpen, onClose }) {
   const navigate = useNavigate();
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const { user } = useAuthStore();
 
   if (!isOpen || !donor) return null;
 
   const name = donor.users?.full_name || 'Campus Donor';
   const bloodType = donor.blood_group || 'O+';
-  const { user } = useAuthStore();
   const isAvailable = donor.is_available !== false;
   const phone = donor.phone || donor.contact_number || donor.users?.phone || '';
   const email = donor.users?.email || '';
