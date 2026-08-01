@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { motion } from 'framer-motion';
@@ -17,6 +17,14 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuthStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Create an Account | Join BloodBridge';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', 'Sign up for BloodBridge to join our active network of student blood donors and emergency requests.');
+    }
+  }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();

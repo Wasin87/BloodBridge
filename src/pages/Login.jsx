@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { motion } from 'framer-motion';
@@ -16,6 +16,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuthStore();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = 'Sign In | BloodBridge Network';
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', 'Log in to your BloodBridge account to join the donor directory or manage emergency requests.');
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();

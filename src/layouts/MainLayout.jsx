@@ -21,6 +21,52 @@ export default function MainLayout() {
 
   const isAdmin = checkIsAdmin(user?.email, user?.user_metadata, profile?.role);
 
+  // Dynamic SEO Page Title & Description Updates
+  useEffect(() => {
+    const seoMap = {
+      '/': {
+        title: 'BloodBridge | Campus Blood Donation & Emergency Network',
+        description: 'BloodBridge connects campus students with blood donors in real-time. Post, search, and manage blood requests quickly and easily to save lives on campus.'
+      },
+      '/donors': {
+        title: 'Find Donors | BloodBridge Campus Directory',
+        description: 'Search and filter verified campus blood donors by blood group, district, university, and availability. Direct donor contact and immediate matching.'
+      },
+      '/become-donor': {
+        title: 'Register as a Donor | Become a Campus Hero | BloodBridge',
+        description: 'Register as an active blood donor on BloodBridge. Become a campus hero and help save lives when your campus needs you.'
+      },
+      '/request-blood': {
+        title: 'Post Blood Request | Emergency Blood Directory',
+        description: 'Create a verified emergency blood request on BloodBridge. Direct notifications, contact numbers, and quick matching with campus donors.'
+      },
+      '/requests': {
+        title: 'Active Blood Requests | Campus Emergency Feed',
+        description: 'View active emergency blood requests across campuses. Help fellow students, track donations, and coordinate a quick life-saving response.'
+      },
+      '/profile': {
+        title: 'My Profile | BloodBridge Dashboard',
+        description: 'Manage your campus profile, update your blood donor availability, upload profile photos, and track your donation history securely.'
+      },
+      '/admin': {
+        title: 'Admin Command Center | BloodBridge Control',
+        description: 'Secure BloodBridge administrative panel. Manage users, verify donor requests, send broadcasts, and moderate safety reports.'
+      }
+    };
+
+    const currentSeo = seoMap[location.pathname] || {
+      title: 'BloodBridge | Campus Blood Donation & Emergency Network',
+      description: 'BloodBridge - Smart Campus Blood Donation & Emergency Network. Connect with student donors, post emergency blood requests, and save lives in real-time.'
+    };
+
+    document.title = currentSeo.title;
+    
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', currentSeo.description);
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
