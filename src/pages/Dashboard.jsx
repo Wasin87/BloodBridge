@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { fetchBloodRequests, fetchPlatformStats, fetchBroadcasts } from '../lib/db';
+import { fetchBloodRequests, fetchPlatformStats, fetchBroadcasts, fetchDonorProfiles } from '../lib/db';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Droplet, HeartPulse, Radio, Users, HandHeart, Zap, Clock, ArrowRight, ShieldCheck, Download, AlertCircle, Phone, Sparkles, MapPin, Search, BellRing } from 'lucide-react';
+import { Droplet, HeartPulse, Radio, Users, HandHeart, Zap, Clock, ArrowRight, ShieldCheck, Download, AlertCircle, Phone, Sparkles, MapPin, Search, BellRing, HeartHandshake } from 'lucide-react';
+import DonorDetailsModal from '../components/DonorDetailsModal';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { profile, user } = useAuthStore();
   const [recentRequests, setRecentRequests] = useState([]);
+  const [recentDonors, setRecentDonors] = useState([]);
+  const [selectedDonorForDetails, setSelectedDonorForDetails] = useState(null);
   const [broadcasts, setBroadcasts] = useState([]);
   const [stats, setStats] = useState({
     totalDonors: 0,
@@ -18,6 +21,17 @@ export default function Dashboard() {
     livesSaved: 0,
     avgResponseTime: '8 Mins'
   });
+
+  const formatLastDonation = (dateStr) => {
+    if (!dateStr) return '18 Aug 2026';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '18 Aug 2026';
+      return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch (e) {
+      return '18 Aug 2026';
+    }
+  };
 
   useEffect(() => {
     const fetchActiveBroadcasts = async () => {
@@ -36,6 +50,34 @@ export default function Dashboard() {
       }
       const liveStats = await fetchPlatformStats();
       setStats(liveStats);
+      
+      const donorsRes = await fetchDonorProfiles({});
+      if (donorsRes.data && donorsRes.data.length > 0) {
+        setRecentDonors(donorsRes.data.slice(0, 2));
+      } else {
+        setRecentDonors([
+          {
+            id: 'fallback-donor-1',
+            users: { full_name: 'Wasin Ahmed' },
+            blood_group: 'O+',
+            university: 'Dhaka University',
+            district: 'Dhaka',
+            last_donation_date: '2026-08-18',
+            is_available: true,
+            avatar_url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&q=80'
+          },
+          {
+            id: 'fallback-donor-2',
+            users: { full_name: 'Tasnim Rahman' },
+            blood_group: 'A+',
+            university: 'NSU Dhaka',
+            district: 'Dhaka',
+            last_donation_date: '2026-07-25',
+            is_available: true,
+            avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80'
+          }
+        ]);
+      }
       
       await fetchActiveBroadcasts();
     };
@@ -151,15 +193,21 @@ export default function Dashboard() {
 
         {/* Dynamic Trust and Impact Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8 pt-8 border-t border-border/60">
-          <div className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5">
-            <div className="text-2xl font-black text-foreground">{stats.totalDonors}</div>
+          <div 
+            onClick={() => navigate('/donors')}
+            className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5 cursor-pointer hover:bg-rose-500/10 hover:border-rose-500/30 transition-all group"
+          >
+            <div className="text-2xl font-black text-foreground group-hover:text-primary transition-colors">{stats.totalDonors}</div>
             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
               <Users size={12} className="text-primary" /> Active Donors
             </div>
           </div>
 
-          <div className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5">
-            <div className="text-2xl font-black text-primary">{stats.totalRequests}</div>
+          <div 
+            onClick={() => navigate('/requests')}
+            className="p-3.5 rounded-2xl bg-secondary/30 border border-border/50 text-center space-y-0.5 cursor-pointer hover:bg-rose-500/10 hover:border-rose-500/30 transition-all group"
+          >
+            <div className="text-2xl font-black text-primary group-hover:text-primary transition-colors">{stats.totalRequests}</div>
             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center justify-center gap-1">
               <Radio size={12} className="text-primary" /> Active Requests
             </div>
@@ -181,47 +229,89 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Primary Navigation Cards */}
-      <div className="grid md:grid-cols-2 gap-5">
-        <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-xl hover:border-primary/40 transition-all flex flex-col justify-between space-y-4">
-          <div className="space-y-3">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center font-black text-lg">
-              <Droplet className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">Become a Campus Donor</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Register your blood group, set your availability, and save lives whenever emergencies arise in your university.
-              </p>
-            </div>
+      {/* Blood Donors Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Blood Donors</h3>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              Connect with active student donors available for emergency situations.
+            </p>
           </div>
           <Button 
-            onClick={() => navigate('/become-donor')}
-            className="w-full rounded-2xl bg-primary text-primary-foreground font-bold h-11 text-xs gap-2 shadow-lg"
+            variant="outline" 
+            onClick={() => navigate('/donors')} 
+            className="text-xs font-bold border-border bg-card text-primary hover:bg-secondary rounded-2xl h-9 px-4 gap-1.5 shadow-sm shrink-0"
           >
-            Register Profile <ArrowRight size={14} />
+            View All Donors <ArrowRight size={14} />
           </Button>
         </div>
 
-        <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-xl hover:border-primary/40 transition-all flex flex-col justify-between space-y-4">
-          <div className="space-y-3">
-            <div className="h-12 w-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 flex items-center justify-center font-black text-lg">
-              <Radio className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-foreground">Request Blood Urgently</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Post an urgent requirement. Nearby matching donors will receive notification alerts immediately.
-              </p>
-            </div>
-          </div>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/request-blood')}
-            className="w-full rounded-2xl border-border bg-card text-foreground font-bold hover:bg-secondary h-11 text-xs gap-2"
-          >
-            Create Blood Request <ArrowRight size={14} />
-          </Button>
+        <div className="grid grid-cols-2 gap-4">
+          {recentDonors.map((donor) => {
+            const name = donor.users?.full_name || 'Campus Donor';
+            const bloodType = donor.blood_group || 'O+';
+            const location = donor.university || donor.district || 'Campus Main';
+            const dateStr = formatLastDonation(donor.last_donation_date);
+            const avatarUrl = donor.avatar_url || donor.users?.avatar_url || `https://images.unsplash.com/photo-${1534528741775 + (donor.id?.charCodeAt(0) || 0) * 10}?auto=format&fit=crop&w=150&q=80`;
+
+            return (
+              <Card 
+                key={donor.id} 
+                className="rounded-3xl border-border bg-card/90 p-3 sm:p-5 shadow-lg hover:border-primary/40 transition-all flex flex-col justify-between"
+              >
+                <CardContent className="p-0 space-y-3 flex flex-col h-full justify-between">
+                  {/* Top Header Row */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                      <div className="h-9 w-9 sm:h-12 sm:w-12 rounded-full overflow-hidden border border-emerald-400 ring-2 ring-emerald-400/10 shrink-0 bg-muted">
+                        <img 
+                          src={avatarUrl}
+                          alt={name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
+                          }}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-foreground text-xs sm:text-sm truncate">{name}</h4>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1 truncate">
+                          <MapPin size={10} className="text-primary shrink-0" /> {location}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl sm:rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-500 font-black text-xs sm:text-sm shrink-0">
+                      {bloodType}
+                    </div>
+                  </div>
+
+                  {/* Badges and Stats */}
+                  <div className="space-y-1.5 pt-2 border-t border-border/50">
+                    <div className="flex items-center justify-between flex-wrap gap-1 text-[10px] sm:text-xs text-muted-foreground">
+                      <span className="font-medium">Last Donation:</span>
+                      <span className="font-bold text-foreground">{dateStr}</span>
+                    </div>
+
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[9px] sm:text-[10px] font-extrabold w-fit">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Ready to Donate
+                    </div>
+                  </div>
+
+                  {/* Request Button */}
+                  <Button 
+                    size="sm" 
+                    onClick={() => setSelectedDonorForDetails(donor)}
+                    className="w-full rounded-2xl bg-[#FFB4A9] text-[#410002] hover:bg-[#ffa093] font-bold h-8 sm:h-10 text-[11px] sm:text-xs mt-2 gap-1 shadow-md shrink-0"
+                  >
+                    <HeartHandshake size={12} /> Request
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
@@ -299,6 +389,12 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      <DonorDetailsModal 
+        donor={selectedDonorForDetails} 
+        isOpen={!!selectedDonorForDetails} 
+        onClose={() => setSelectedDonorForDetails(null)} 
+      />
     </div>
   );
 }

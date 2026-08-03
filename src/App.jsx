@@ -35,6 +35,7 @@ export default function App() {
         {/* Public Routes */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/donors" element={<DonorDirectory />} />
         </Route>
         
         {/* Protected Routes */}
@@ -43,7 +44,6 @@ export default function App() {
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/become-donor" element={<BecomeDonor />} />
             <Route path="/request-blood" element={<RequestBlood />} />
-            <Route path="/donors" element={<DonorDirectory />} />
             <Route path="/requests" element={<RequestDirectory />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
