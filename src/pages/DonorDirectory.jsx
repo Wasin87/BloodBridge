@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { fetchDonorProfiles } from '../lib/db';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
-import { Search, CheckCircle2, BadgeCheck, GraduationCap, Calendar, IdCard, Loader2, Phone, Edit, Eye, HeartHandshake } from 'lucide-react';
+import { Search, CheckCircle2, BadgeCheck, GraduationCap, Calendar, IdCard, Loader2, Phone, Edit, Eye, HeartHandshake, ArrowRight, ArrowLeft } from 'lucide-react';
 import EditDonorModal from '../components/EditDonorModal';
 import DonorDetailsModal from '../components/DonorDetailsModal';
 import { toast } from 'sonner';
@@ -24,6 +24,49 @@ export default function DonorDirectory() {
   const [selectedDonorForDetails, setSelectedDonorForDetails] = useState(null);
 
   const bloodGroups = ['All', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+
+  const scrollContainerRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const updateScrollArrows = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      const scrollLeft = container.scrollLeft;
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      setShowLeftArrow(scrollLeft > 5);
+      setShowRightArrow(scrollLeft < maxScroll - 5);
+    }
+  };
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', updateScrollArrows);
+      updateScrollArrows();
+      const timer = setTimeout(updateScrollArrows, 150);
+      window.addEventListener('resize', updateScrollArrows);
+      return () => {
+        container.removeEventListener('scroll', updateScrollArrows);
+        window.removeEventListener('resize', updateScrollArrows);
+        clearTimeout(timer);
+      };
+    }
+  }, [donors]); // Also check when donors change, just in case
+
+  const handleScrollLeft = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.scrollBy({ left: -200, behavior: 'smooth' });
+    }
+  };
+
+  const handleScrollRight = () => {
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.scrollBy({ left: 200, behavior: 'smooth' });
+    }
+  };
 
   // Handle URL search parameter ?group=A+
   useEffect(() => {
@@ -85,23 +128,56 @@ export default function DonorDirectory() {
       </div>
 
       {/* Blood Group Chips Carousel */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {bloodGroups.map((bg) => {
-          const isSelected = selectedGroup === bg;
-          return (
+      <div className="relative flex items-center w-full group/carousel">
+        {/* Left Arrow Button Overlay */}
+        {showLeftArrow && (
+          <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-background via-background/80 to-transparent flex items-center justify-start z-10 transition-all duration-300">
             <button
-              key={bg}
-              onClick={() => handleGroupSelect(bg)}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
-                isSelected
-                  ? 'bg-[#FFB4A9] text-[#410002] font-bold shadow-md shadow-red-950/20'
-                  : 'bg-card border border-border text-muted-foreground hover:text-foreground'
-              }`}
+              onClick={handleScrollLeft}
+              className="bg-card hover:bg-secondary border border-border text-foreground hover:text-primary p-2 rounded-full shadow-lg cursor-pointer transition-all flex items-center justify-center active:scale-90 pointer-events-auto"
+              aria-label="Scroll Left"
             >
-              {bg === 'All' ? 'All Groups' : bg}
+              <ArrowLeft className="h-4 w-4" />
             </button>
-          );
-        })}
+          </div>
+        )}
+
+        {/* Scrollable Container */}
+        <div 
+          ref={scrollContainerRef}
+          onScroll={updateScrollArrows}
+          className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-none w-full scroll-smooth"
+        >
+          {bloodGroups.map((bg) => {
+            const isSelected = selectedGroup === bg;
+            return (
+              <button
+                key={bg}
+                onClick={() => handleGroupSelect(bg)}
+                className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer select-none ${
+                  isSelected
+                    ? 'bg-[#FFB4A9] text-[#410002] font-bold shadow-md shadow-red-950/20'
+                    : 'bg-card border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+                }`}
+              >
+                {bg === 'All' ? 'All Groups' : bg}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right Arrow Button Overlay */}
+        {showRightArrow && (
+          <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background via-background/80 to-transparent flex items-center justify-end z-10 transition-all duration-300">
+            <button
+              onClick={handleScrollRight}
+              className="bg-card hover:bg-secondary border border-border text-foreground hover:text-primary p-2 rounded-full shadow-lg cursor-pointer transition-all flex items-center justify-center active:scale-90 pointer-events-auto"
+              aria-label="Scroll Right"
+            >
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Available Only Toggle */}
@@ -145,7 +221,11 @@ export default function DonorDirectory() {
             const cardAvatar = (isMyCard ? (user?.avatar_url || savedAvatar) : null) || donor.avatar_url || donor.users?.avatar_url || `https://images.unsplash.com/photo-${1534528741775 + (donor.id?.charCodeAt(0) || 0) * 10}?auto=format&fit=crop&w=150&q=80`;
 
             return (
-              <Card key={donor.id} className="rounded-3xl border-border bg-card/90 p-5 shadow-xl hover:border-primary/40 transition-all flex flex-col justify-between">
+              <Card 
+                key={donor.id} 
+                onClick={() => setSelectedDonorForDetails(donor)}
+                className="rounded-3xl border border-border bg-card/90 p-5 shadow-xl hover:shadow-2xl hover:border-primary/40 transition-all flex flex-col justify-between cursor-pointer group/card"
+              >
                 <CardContent className="p-0 space-y-4">
                   {/* Top Avatar & Blood Badge */}
                   <div className="flex items-start justify-between">
@@ -155,6 +235,7 @@ export default function DonorDirectory() {
                           src={cardAvatar} 
                           alt={name}
                           className="h-full w-full object-cover rounded-full"
+                          referrerPolicy="no-referrer"
                           onError={(e) => {
                             e.currentTarget.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80';
                           }}
@@ -181,7 +262,7 @@ export default function DonorDirectory() {
                   {/* Donor Info */}
                   <div className="space-y-1">
                     <div className="flex items-center gap-1.5">
-                      <h3 className="font-bold text-lg text-foreground">{name}</h3>
+                      <h3 className="font-bold text-lg text-foreground group-hover/card:text-primary transition-colors">{name}</h3>
                       <BadgeCheck className="h-4 w-4 text-emerald-400 fill-emerald-400/20" />
                     </div>
 
@@ -202,18 +283,24 @@ export default function DonorDirectory() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="pt-2">
+                  <div className="pt-2" onClick={(e) => e.stopPropagation()}>
                     {isMyCard ? (
                       <div className="grid grid-cols-2 gap-2">
                         <Button 
-                          onClick={() => setSelectedDonorForDetails(donor)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDonorForDetails(donor);
+                          }}
                           variant="outline"
                           className="rounded-2xl border-border text-foreground font-semibold h-11 text-xs gap-1.5"
                         >
                           <Eye size={14} /> Preview Card
                         </Button>
                         <Button 
-                          onClick={() => setEditingDonor(donor)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingDonor(donor);
+                          }}
                           className="rounded-2xl bg-primary text-primary-foreground font-bold h-11 text-xs gap-1.5 shadow-md"
                         >
                           <Edit size={14} /> Edit My Card
@@ -222,7 +309,10 @@ export default function DonorDirectory() {
                     ) : (
                       <div className="grid grid-cols-2 gap-2">
                         <Button 
-                          onClick={() => setSelectedDonorForDetails(donor)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDonorForDetails(donor);
+                          }}
                           variant="outline"
                           className="rounded-2xl border-border hover:bg-secondary text-foreground font-bold h-11 text-xs gap-1.5"
                         >
@@ -231,7 +321,10 @@ export default function DonorDirectory() {
 
                         {isAvailable ? (
                           <Button 
-                            onClick={() => handleRequestDonor(donor)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRequestDonor(donor);
+                            }}
                             className="rounded-2xl bg-[#FFB4A9] text-[#410002] font-bold hover:bg-[#ffa093] h-11 text-xs shadow-md gap-1"
                           >
                             <HeartHandshake size={14} /> Request
